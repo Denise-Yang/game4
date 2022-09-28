@@ -382,8 +382,8 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	scene.draw(*camera);
 	if (dialogue_index < dialogue.size()){
 		render_text(dialogue[dialogue_index][0], (windowW-300.f)/2,150.f, .5f, glm::vec3(0, 0.8f, 0.2f));
-		render_text(dialogue[dialogue_index][2], windowW-300.f,100.f, .5f, glm::vec3(0.f, 0.8f, 0.2f));
-		render_text(dialogue[dialogue_index][1], 50.f, 100.f, .5f, glm::vec3(0.0, 0.8f, 0.2f));
+		render_text(dialogue[dialogue_index][2] + "(x)", windowW-300.f,100.f, .5f, glm::vec3(0.f, 0.8f, 0.2f));
+		render_text(dialogue[dialogue_index][1] + "(z)", 50.f, 100.f, .5f, glm::vec3(0.0, 0.8f, 0.2f));
 
 	}
 	
