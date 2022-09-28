@@ -2,7 +2,9 @@
 
 #include "LitColorTextureProgram.hpp"
 #include "ColorTextureProgram.hpp"
-#include <fstream>
+#include <istream>
+
+#include <iostream>     // std::cin, std::cout
 #include "DrawLines.hpp"
 // #include "TextRenderer.hpp"
 #include "shader.hpp"
@@ -58,10 +60,10 @@ PlayMode::PlayMode() : scene(*hexapod_scene), shader(data_path("text.vs").c_str(
 	if (upper_leg == nullptr) throw std::runtime_error("Upper leg not found.");
 	if (lower_leg == nullptr) throw std::runtime_error("Lower leg not found.");
 	/**/
-	// load_dialogue(data_path("testDialogue.txt"));
-	dialogue.push_back({"Hello world", "pls end me", "live laugh love"}); 
-	dialogue.push_back({"You are now dead","yay","damn"});
-	dialogue.push_back({"You're a basic white girl","#JustGirlyTings", "#Slayyy"});
+	load_dialogue(data_path("testDialogue.txt"));
+	// dialogue.push_back({"Hello world", "pls end me", "live laugh love"}); 
+	// dialogue.push_back({"You are now dead","yay","damn"});
+	// dialogue.push_back({"You're a basic white girl","#JustGirlyTings", "#Slayyy"});
 
 
 	hip_base_rotation = hip->rotation;
@@ -155,28 +157,36 @@ PlayMode::PlayMode() : scene(*hexapod_scene), shader(data_path("text.vs").c_str(
 PlayMode::~PlayMode() {
 }
 
-void PlayMode::load_dialogue(std::string filename){
-}
-/*
-fix string reading
-void PlayMode::load_dialogue(std::string filename, std::string right,std::string left){
-	std::ifstream mainfile(data_path(filename) );
-	std::ifstream right_choices(data_path(right) );
-	std::ifstream left_choices(data_path(left) );
-	//assume filename is a multiple of three
 
-	if (mainfile.is_open()) {
-		
-		while (std::getline(mainfile, line0)) {
+void PlayMode::load_dialogue(std::string filename){
+	std::ifstream file;
+	file.open("dist/testDialogue.txt");
+
+	if (file.is_open()) {
+		std::string line;
+		while (getline( file, line)) {
 			// using printf() in all tests for consistency
-			std::getline( file, line1 );
-			std::getline( file, line2 );
-			std::vector<std::string> phrase {line0,line1,line2};
-			dialogue.push_back(phrase);
+
+			size_t pos = 0;
+			// size_t prevpos = 0;
+			std::string token;
+			std::string delimiter = ",";
+			std::vector<std::string> text_choice;
+			pos = line.find(delimiter);
+			while (pos != std::string::npos) {
+				token = line.substr(0, pos);
+				line = line.substr(pos+1);
+				pos = line.find(delimiter);
+				text_choice.push_back(token);
+			}
+			text_choice.push_back(line);
+			dialogue.push_back(text_choice);
 		}
-    file.close();
+    	file.close();
 	}
-}*/
+}
+	
+	
 
 bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) {
 	windowW = window_size.x;
