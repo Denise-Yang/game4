@@ -23,6 +23,7 @@ struct PlayMode : Mode {
 	virtual bool handle_event(SDL_Event const &, glm::uvec2 const &window_size) override;
 	virtual void update(float elapsed) override;
 	virtual void draw(glm::uvec2 const &drawable_size) override;
+	virtual void load_dialogue(std::string filename);
 
 	//----- game state -----
 
@@ -35,6 +36,14 @@ struct PlayMode : Mode {
 	//local copy of the game scene (so code can change it during gameplay):
 	Scene scene;
 
+	int dialogue_index = 0;
+	int windowW;
+	int windowH;
+
+	/*Could create a character struct each with their own dialogue*/
+	std::vector<std::vector<std::string>> dialogue;
+
+
 	//hexapod leg to wobble:
 	Scene::Transform *hip = nullptr;
 	Scene::Transform *upper_leg = nullptr;
@@ -45,7 +54,8 @@ struct PlayMode : Mode {
 	float wobble = 0.0f;
 
 	glm::vec3 get_leg_tip_position();
-
+	//x,y,scale
+	
 	//music coming from the tip of the leg (as a demonstration):
 	std::shared_ptr< Sound::PlayingSample > leg_tip_loop;
 	

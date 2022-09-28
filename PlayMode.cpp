@@ -2,7 +2,7 @@
 
 #include "LitColorTextureProgram.hpp"
 #include "ColorTextureProgram.hpp"
-
+#include <fstream>
 #include "DrawLines.hpp"
 // #include "TextRenderer.hpp"
 #include "shader.hpp"
@@ -46,6 +46,7 @@ Load< Sound::Sample > dusty_floor_sample(LoadTagDefault, []() -> Sound::Sample c
 	return new Sound::Sample(data_path("dusty-floor.opus"));
 });
 
+
 PlayMode::PlayMode() : scene(*hexapod_scene), shader(data_path("text.vs").c_str(), data_path("text.fs").c_str()) {
 	//get pointers to leg for convenience:
 	for (auto &transform : scene.transforms) {
@@ -56,6 +57,12 @@ PlayMode::PlayMode() : scene(*hexapod_scene), shader(data_path("text.vs").c_str(
 	if (hip == nullptr) throw std::runtime_error("Hip not found.");
 	if (upper_leg == nullptr) throw std::runtime_error("Upper leg not found.");
 	if (lower_leg == nullptr) throw std::runtime_error("Lower leg not found.");
+	/**/
+	// load_dialogue(data_path("testDialogue.txt"));
+	dialogue.push_back({"Hello world", "pls end me", "live laugh love"}); 
+	dialogue.push_back({"You are now dead","yay","damn"});
+	dialogue.push_back({"You're a basic white girl","#JustGirlyTings", "#Slayyy"});
+
 
 	hip_base_rotation = hip->rotation;
 	upper_leg_base_rotation = upper_leg->rotation;
@@ -148,8 +155,32 @@ PlayMode::PlayMode() : scene(*hexapod_scene), shader(data_path("text.vs").c_str(
 PlayMode::~PlayMode() {
 }
 
-bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) {
+void PlayMode::load_dialogue(std::string filename){
+}
+/*
+fix string reading
+void PlayMode::load_dialogue(std::string filename, std::string right,std::string left){
+	std::ifstream mainfile(data_path(filename) );
+	std::ifstream right_choices(data_path(right) );
+	std::ifstream left_choices(data_path(left) );
+	//assume filename is a multiple of three
 
+	if (mainfile.is_open()) {
+		
+		while (std::getline(mainfile, line0)) {
+			// using printf() in all tests for consistency
+			std::getline( file, line1 );
+			std::getline( file, line2 );
+			std::vector<std::string> phrase {line0,line1,line2};
+			dialogue.push_back(phrase);
+		}
+    file.close();
+	}
+}*/
+
+bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) {
+	windowW = window_size.x;
+	windowH = window_size.y;
 	if (evt.type == SDL_KEYDOWN) {
 		if (evt.key.keysym.sym == SDLK_ESCAPE) {
 			SDL_SetRelativeMouseMode(SDL_FALSE);
@@ -169,6 +200,15 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 		} else if (evt.key.keysym.sym == SDLK_s) {
 			down.downs += 1;
 			down.pressed = true;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_z) {
+			//left dialogue option
+			if (dialogue_index < dialogue.size()) dialogue_index = dialogue_index*2+1;
+			return true;
+		}
+		else if (evt.key.keysym.sym == SDLK_x) {
+			//right dialogue option
+			if (dialogue_index < dialogue.size()) dialogue_index = dialogue_index*2+2;
 			return true;
 		}
 	} else if (evt.type == SDL_KEYUP) {
@@ -330,31 +370,13 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	glDepthFunc(GL_LESS); //this is the default depth comparison function, but FYI you can change it.
 
 	scene.draw(*camera);
+	if (dialogue_index < dialogue.size()){
+		render_text(dialogue[dialogue_index][0], (windowW-300.f)/2,150.f, .5f, glm::vec3(0, 0.8f, 0.2f));
+		render_text(dialogue[dialogue_index][2], windowW-300.f,100.f, .5f, glm::vec3(0.f, 0.8f, 0.2f));
+		render_text(dialogue[dialogue_index][1], 50.f, 100.f, .5f, glm::vec3(0.0, 0.8f, 0.2f));
 
-	// { //use DrawLines to overlay some text:
-	// 	glDisable(GL_DEPTH_TEST);
-	// 	float aspect = float(drawable_size.x) / float(drawable_size.y);
-	// 	DrawLines lines(glm::mat4(
-	// 		1.0f / aspect, 0.0f, 0.0f, 0.0f,
-	// 		0.0f, 1.0f, 0.0f, 0.0f,
-	// 		0.0f, 0.0f, 1.0f, 0.0f,
-	// 		0.0f, 0.0f, 0.0f, 1.0f
-	// 	));
-
-	// 	constexpr float H = 0.09f;
-	// 	lines.draw_text("Mouse motion rotates camera; WASD moves; escape ungrabs mouse",
-	// 		glm::vec3(-aspect + 0.1f * H, -1.0 + 0.1f * H, 0.0),
-	// 		glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-	// 		glm::u8vec4(0x00, 0x00, 0x00, 0x00));
-	// 	float ofs = 2.0f / drawable_size.y;
-	// 	lines.draw_text("Mouse motion rotates camera; WASD moves; escape ungrabs mouse",
-	// 		glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + + 0.1f * H + ofs, 0.0),
-	// 		glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-	// 		glm::u8vec4(0xff, 0xff, 0xff, 0x00));
-	// }
-	// TextRenderer textRenderer;
-	// textRenderer.draw_string("test string");
-	render_text("Test text :)", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+	}
+	
 	GL_ERRORS();
 }
 
