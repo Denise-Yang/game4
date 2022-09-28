@@ -70,6 +70,12 @@ PlayMode::PlayMode() : scene(*hexapod_scene), shader(data_path("text.vs").c_str(
 	leg_tip_loop = Sound::loop_3D(*dusty_floor_sample, 1.0f, get_leg_tip_position(), 10.0f);
 
 	// shader = Shader(data_path("text.vs"), data_path("text.fs"));
+
+	// OpenGL state
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	shader.use();
 	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
