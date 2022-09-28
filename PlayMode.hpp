@@ -8,6 +8,13 @@
 #include <vector>
 #include <deque>
 
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
+#include "shader.hpp"
+#include <map>
+
+
 struct PlayMode : Mode {
 	PlayMode();
 	virtual ~PlayMode();
@@ -44,5 +51,22 @@ struct PlayMode : Mode {
 	
 	//camera:
 	Scene::Camera *camera = nullptr;
+
+	struct Character {
+	    unsigned int TextureID; // ID handle of the glyph texture
+		glm::ivec2   Size;      // Size of glyph
+		glm::ivec2   Bearing;   // Offset from baseline to left/top of glyph
+		unsigned int Advance;   // Horizontal offset to advance to next glyph
+	};
+	std::map<char, Character> Characters;
+
+	glm::mat4 projection = glm::ortho(0.0f, 1280.0f, 0.0f, 720.0f);
+
+	FT_Library ft;
+	FT_Face face;
+	unsigned int VAO, VBO;
+	Shader shader;
+
+	void render_text(std::string text, float x, float y, float scale, glm::vec3 color);
 
 };
