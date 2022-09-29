@@ -231,43 +231,62 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			SDL_SetRelativeMouseMode(SDL_FALSE);
 			return true;
 		} else if (evt.key.keysym.sym == SDLK_a) {
-			left.downs += 1;
-			left.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_d) {
-			right.downs += 1;
-			right.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_w) {
-			up.downs += 1;
-			up.pressed = true;
+			a.downs += 1;
+			a.pressed = true;
 			return true;
 		} else if (evt.key.keysym.sym == SDLK_s) {
-			down.downs += 1;
-			down.pressed = true;
+			s.downs += 1;
+			s.pressed = true;
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_z) {
-			//left dialogue option
-			if (dialogue_index < dialogue.size()) dialogue_index = dialogue_index*2+1;
+		} else if (evt.key.keysym.sym == SDLK_d) {
+			d.downs += 1;
+			d.pressed = true;
 			return true;
-		}
-		else if (evt.key.keysym.sym == SDLK_x) {
-			//right dialogue option
-			if (dialogue_index < dialogue.size()) dialogue_index = dialogue_index*2+2;
+		} else if (evt.key.keysym.sym == SDLK_f) {
+			f.downs += 1;
+			f.pressed = true;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_j) {
+			j.downs += 1;
+			j.pressed = true;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_k) {
+			k.downs += 1;
+			k.pressed = true;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_l) {
+			l.downs += 1;
+			l.pressed = true;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_SEMICOLON) {
+			semi.downs += 1;
+			semi.pressed = true;
 			return true;
 		}
 	} else if (evt.type == SDL_KEYUP) {
 		if (evt.key.keysym.sym == SDLK_a) {
-			left.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_d) {
-			right.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_w) {
-			up.pressed = false;
+			a.pressed = false;
 			return true;
 		} else if (evt.key.keysym.sym == SDLK_s) {
-			down.pressed = false;
+			s.pressed = false;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_d) {
+			d.pressed = false;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_f) {
+			f.pressed = false;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_j) {
+			j.pressed = false;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_k) {
+			k.pressed = false;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_l) {
+			l.pressed = false;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_SEMICOLON) {
+			semi.pressed = false;
 			return true;
 		}
 	} else if (evt.type == SDL_MOUSEBUTTONDOWN) {
@@ -275,20 +294,22 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			SDL_SetRelativeMouseMode(SDL_TRUE);
 			return true;
 		}
-	} else if (evt.type == SDL_MOUSEMOTION) {
-		if (SDL_GetRelativeMouseMode() == SDL_TRUE) {
-			glm::vec2 motion = glm::vec2(
-				evt.motion.xrel / float(window_size.y),
-				-evt.motion.yrel / float(window_size.y)
-			);
-			camera->transform->rotation = glm::normalize(
-				camera->transform->rotation
-				* glm::angleAxis(-motion.x * camera->fovy, glm::vec3(0.0f, 1.0f, 0.0f))
-				* glm::angleAxis(motion.y * camera->fovy, glm::vec3(1.0f, 0.0f, 0.0f))
-			);
-			return true;
-		}
-	}
+	} 
+	// Lock camera for now
+	// else if (evt.type == SDL_MOUSEMOTION) {
+	// 	if (SDL_GetRelativeMouseMode() == SDL_TRUE) {
+	// 		glm::vec2 motion = glm::vec2(
+	// 			evt.motion.xrel / float(window_size.y),
+	// 			-evt.motion.yrel / float(window_size.y)
+	// 		);
+	// 		camera->transform->rotation = glm::normalize(
+	// 			camera->transform->rotation
+	// 			* glm::angleAxis(-motion.x * camera->fovy, glm::vec3(0.0f, 1.0f, 0.0f))
+	// 			* glm::angleAxis(motion.y * camera->fovy, glm::vec3(1.0f, 0.0f, 0.0f))
+	// 		);
+	// 		return true;
+	// 	}
+	// }
 
 	return false;
 }
@@ -345,10 +366,14 @@ void PlayMode::update(float elapsed) {
 	}
 
 	//reset button press counters:
-	left.downs = 0;
-	right.downs = 0;
-	up.downs = 0;
-	down.downs = 0;
+	a.downs = 0;
+	s.downs = 0;
+	d.downs = 0;
+	f.downs = 0;
+	j.downs = 0;
+	k.downs = 0;
+	l.downs = 0;
+	semi.downs = 0;
 }
 
 void PlayMode::render_text(std::string text, float x, float y, float scale, glm::vec3 color) {

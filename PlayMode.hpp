@@ -61,7 +61,7 @@ struct Player {
 
 	// Individual player info.
 	Move *moves[num_moves];
-	bool is_deciding = false;
+	bool is_deciding = true;
 	int move_selected = -1;
 	bool is_winner = false;
 	int max_health = 100;
@@ -94,6 +94,10 @@ struct PlayMode : Mode {
 
 	//functions called by main loop:
 	virtual bool handle_event(SDL_Event const &, glm::uvec2 const &window_size) override;
+	void update_deciding(float elapsed);
+	void update_animating(float elapsed);
+	void update_reporting(float elapsed);
+	void update_over(float elapsed);
 	virtual void update(float elapsed) override;
 	virtual void draw(glm::uvec2 const &drawable_size) override;
 	virtual void load_dialogue(std::string filename);
@@ -104,7 +108,7 @@ struct PlayMode : Mode {
 	struct Button {
 		uint8_t downs = 0;
 		uint8_t pressed = 0;
-	} left, right, down, up;
+	} a, s, d, f, j, k, l, semi;
 
 	//local copy of the game scene (so code can change it during gameplay):
 	Scene scene;
