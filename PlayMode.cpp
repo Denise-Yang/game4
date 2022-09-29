@@ -3,6 +3,8 @@
 #include "LitColorTextureProgram.hpp"
 #include "ColorTextureProgram.hpp"
 #include <istream>
+#include <chrono>
+#include <thread>
 
 #include <iostream>     // std::cin, std::cout
 #include "DrawLines.hpp"
@@ -45,9 +47,31 @@ Load< Scene > hexapod_scene(LoadTagDefault, []() -> Scene const * {
 	});
 });
 
-Load< Sound::Sample > dusty_floor_sample(LoadTagDefault, []() -> Sound::Sample const * {
-	return new Sound::Sample(data_path("dusty-floor.opus"));
+Load< Sound::Sample > p1_toast_sample(LoadTagDefault, []() -> Sound::Sample const * {
+	return new Sound::Sample(data_path("Toast_Move.wav"));
 });
+Load< Sound::Sample > p1_rap_sample(LoadTagDefault, []() -> Sound::Sample const * {
+	return new Sound::Sample(data_path("Rap_Move.wav"));
+});
+Load< Sound::Sample > p1_miss_sample(LoadTagDefault, []() -> Sound::Sample const * {
+	return new Sound::Sample(data_path("p1miss.wav"));
+});
+Load< Sound::Sample > p1_hit_sample(LoadTagDefault, []() -> Sound::Sample const * {
+	return new Sound::Sample(data_path("p1hit.wav"));
+});
+Load< Sound::Sample > p2_tackle_sample(LoadTagDefault, []() -> Sound::Sample const * {
+	return new Sound::Sample(data_path("tackle.wav"));
+});
+Load< Sound::Sample > p2_call_sample(LoadTagDefault, []() -> Sound::Sample const * {
+	return new Sound::Sample(data_path("bread.wav"));
+});
+Load< Sound::Sample > p2_hit_sample(LoadTagDefault, []() -> Sound::Sample const * {
+	return new Sound::Sample(data_path("p2hit.wav"));
+});
+Load< Sound::Sample > p2_miss_sample(LoadTagDefault, []() -> Sound::Sample const * {
+	return new Sound::Sample(data_path("p2miss.wav"));
+});
+
 
 int Attack::activate(Player *user, Player *target) {
 	int damage_done = base_damage;
@@ -102,25 +126,23 @@ PlayMode::PlayMode() : scene(*hexapod_scene), shader(data_path("text.vs").c_str(
 	cur_phase = DECIDING;
 
 	/**/
-	Attack kick = Attack("Kick", 10, 10.f, 1.f);
-	Attack kick2 = Attack("Kick2", 10, 10.f, 1.f);
-	Attack kick3 = Attack("Kick3", 10, 10.f, 1.f);
-	Attack kick4 = Attack("Kick4", 10, 10.f, 1.f);
+	Attack rap = Attack("Rap", 15, 10.f, 1.f);
+	Attack roast = Attack("Roast", 5, 10.f, 7.f);
+	roast.name = "Roast";
+	rap.name = "Rap";
+	
 
-	Attack punch = Attack("Kick", 10, 10.f, 1.f);
-	Attack punch2 = Attack("Punch2", 10, 10.f, 1.f);
-	Attack punch3 = Attack("Punc3", 10, 10.f, 1.f);
-	Attack punch4 = Attack("Punch4", 10, 10.f, 1.f);
+	Attack tackle = Attack("Loaf", 10, 10.f, 1.f);
+	Attack call = Attack("Roll Call", 15, 10.f, 5.f);
+	tackle.name = "Loaf";
+	call.name = "Roll Call";
 
-	player1.moves.push_back(kick);
-	player1.moves.push_back(kick2);
-	player1.moves.push_back(kick3);
-	player1.moves.push_back(kick4);
-	player2.moves.push_back(punch);
-	player2.moves.push_back(punch2);
-	player2.moves.push_back(punch3);
-	player2.moves.push_back(punch4);
-	load_dialogue(data_path("testDialogue.txt"));
+	player1.moves.push_back(rap);
+	player1.moves.push_back(roast);
+
+	player2.moves.push_back(tackle);
+	player2.moves.push_back(call);
+
 	// dialogue.push_back({"Hello world", "pls end me", "live laugh love"}); 
 	// dialogue.push_back({"You are now dead","yay","damn"});
 	// dialogue.push_back({"You're a basic white girl","#JustGirlyTings", "#Slayyy"});
@@ -136,7 +158,7 @@ PlayMode::PlayMode() : scene(*hexapod_scene), shader(data_path("text.vs").c_str(
 
 	//start music loop playing:
 	// (note: position will be over-ridden in update())
-	leg_tip_loop = Sound::loop_3D(*dusty_floor_sample, 1.0f, get_leg_tip_position(), 10.0f);
+	// leg_tip_loop = Sound::loop_3D(*dusty_floor_sample, 1.0f, get_leg_tip_position(), 10.0f);
 
 	// shader = Shader(data_path("text.vs"), data_path("text.fs"));
 
@@ -351,42 +373,61 @@ void PlayMode::update_deciding(float elapsed) {
 		if (player2.move_selected == -1)
 			std::cerr << "Error: player 2 is not deciding but move selected is -1!" << std::endl;
 		// TODO: change to animating if we make an animating phase
+		 std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(1));
 		cur_phase = REPORTING;
 		return;
 	}
 	// check if players picked a move
+	std::shared_ptr< Sound::PlayingSample >  sample1;
+	std::shared_ptr< Sound::PlayingSample >  sample2;
 	if (a.pressed) {
+		if (player1.is_deciding) {
+			sample1 = Sound::play_3D(*p1_rap_sample, .9f, camera->transform->position, 10.0f);
+		}
+		while(!sample1->stopped){}
 		player1.move_selected = 0;
 		player1.is_deciding = false;
 	}
 	if (s.pressed) {
+		if (player1.is_deciding) {
+			sample1 = Sound::play_3D(*p1_toast_sample, .9f, camera->transform->position, 10.0f);
+		}
+		while(!sample1->stopped){}
 		player1.move_selected = 1;
 		player1.is_deciding = false;
 	}
-	if (d.pressed) {
-		player1.move_selected = 2;
-		player1.is_deciding = false;
-	}
-	if (f.pressed) {
-		player1.move_selected = 3;
-		player1.is_deciding = false;
-	}
+	// if (d.pressed) {
+	// 	player1.move_selected = 2;
+	// 	player1.is_deciding = false;
+	// }
+	// if (f.pressed) {
+	// 	player1.move_selected = 3;
+	// 	player1.is_deciding = false;
+	// }
 	if (j.pressed) {
+		if (player2.is_deciding){
+			sample2 = Sound::play_3D(*p2_tackle_sample, 2.0f, camera->transform->position, 10.0f);
+		}
+		while(!sample2->stopped){}
 		player2.move_selected = 0;
 		player2.is_deciding = false;
 	}
 	if (k.pressed) {
+		if (player2.is_deciding){
+			sample2 = Sound::play_3D(*p2_call_sample, 2.0f, camera->transform->position, 10.0f);
+		}
+		while(!sample2->stopped){}
 		player2.move_selected = 1;
 		player2.is_deciding = false;
 	}
-	if (l.pressed) {
-		player2.move_selected = 2;
-		player2.is_deciding = false;
-	}
-	if (semi.pressed) {
-		player2.move_selected = 3;
-		player2.is_deciding = false;
-	}
+	// if (l.pressed) {
+	// 	player2.move_selected = 2;
+	// 	player2.is_deciding = false;
+	// }
+	// if (semi.pressed) {
+	// 	player2.move_selected = 3;
+	// 	player2.is_deciding = false;
+	// }
 }
 
 void PlayMode::update_animating(float elapsed) {
@@ -399,8 +440,9 @@ void PlayMode::update_reporting(float elapsed) {
 		if (player1.is_winner || player2.is_winner)
 			cur_phase = OVER;
 		else {
-			player1.is_deciding = true;
-			player2.is_deciding = true;
+			player1.move_selected = -1;
+			player2.move_selected = -1;
+			
 			cur_phase = DECIDING;
 		}
 	}
@@ -567,20 +609,23 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			render_text(winner + " wins", (windowW-300.f)/2,200.f, .5f, glm::vec3(1.f, 1.f, 1.f));
 			break; // default value
 		case DECIDING: // players are deciding on moves
-			//(windowW-300.f)/2 <- screen mid
 
-			//player one moves
-			printf("current phase %d\n", player1.move_selected);
+			//Render Player 1 text
+			render_text("HP: "+std::to_string(player1.cur_health), 50,225.f, .5f, glm::vec3(0, 0.8f, 0.2f));
 
-			if (player1.move_selected == -1) render_text("P1 make your move", 50,225.f, .5f, glm::vec3(0, 0.8f, 0.2f));
-			for (int i = 0;i<player1.num_moves;i++){
+			if (player1.move_selected == -1) render_text("P1 make your move", 50,100.f, .5f, glm::vec3(0, 0.8f, 0.2f));
+			
+			for (int i = 0;i<player1.moves.size();i++){
 
 				render_text(player1.moves[i].name, 50,200.f - 30*i, .5f, glm::vec3(0, 0.8f, 0.2f));
 			}
 			
-			if (player2.move_selected == -1) render_text("P2 make your move", windowW-300.f,225.f, .5f, glm::vec3(0, 0.8f, 0.2f));
+			//Render Player 2 text
+			render_text("HP: "+std::to_string(player2.cur_health), windowW-300.f,225.f, .5f, glm::vec3(0, 0.8f, 0.2f));
 
-			for (int i = 0;i<player2.num_moves;i++){
+			if (player2.move_selected == -1) render_text("P2 make your move", windowW-300.f,100.f, .5f, glm::vec3(0, 0.8f, 0.2f));
+
+			for (int i = 0;i<player2.moves.size();i++){
 				render_text(player2.moves[i].name, windowW-300.f,200.f - 30*i, .5f, glm::vec3(0, 0.8f, 0.2f));
 			}
 			
@@ -590,24 +635,31 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		case REPORTING:
 			float p1_height = 200.f;
 			float p2_height = 150.f;
+			std::shared_ptr< Sound::PlayingSample >  sample2;
+			std::shared_ptr< Sound::PlayingSample >  sample1;
 			if (player1.damage_dealt > 0){
+				if (!player1.is_deciding) Sound::play_3D(*p1_hit_sample, .5f, camera->transform->position, 10.0f);
+
 				render_text("Player 1 dealt " + std::to_string(player1.damage_dealt) +" damage", (windowW-300.f)/2, p1_height, .5f, glm::vec3(0, 0.8f, 0.2f));
 			}else{
+				if (!player1.is_deciding) Sound::play_3D(*p1_miss_sample, .5f, camera->transform->position, 10.0f);
+
 				render_text("Player 1 missed", (windowW-300.f)/2, p1_height, .5f, glm::vec3(0, 0.8f, 0.2f));
 			}
+
 			if (player2.damage_dealt > 0){
+				if (!player2.is_deciding) Sound::play_3D(*p2_hit_sample, .5f, camera->transform->position, 10.0f);
+
 				render_text("Player 2 dealt " + std::to_string(player2.damage_dealt) +" damage", (windowW-300.f)/2, p2_height, .5f, glm::vec3(0, 0.8f, 0.2f));
 			}else{
+				if (!player2.is_deciding) Sound::play_3D(*p2_miss_sample, .5f, camera->transform->position, 10.0f);
 				render_text("Player 2 missed", (windowW-300.f)/2, p2_height, .5f, glm::vec3(0, 0.8f, 0.2f));
 			}
+			player1.is_deciding = true;
+			player2.is_deciding = true;
 	
 			break;
 	}
-	// if (dialogue_index < dialogue.size()){
-	// 	render_text(dialogue[dialogue_index][0], (windowW-300.f)/2,150.f, .5f, glm::vec3(0, 0.8f, 0.2f));
-	// 	render_text(dialogue[dialogue_index][2] + "(x)", windowW-300.f,100.f, .5f, glm::vec3(0.f, 0.8f, 0.2f));
-	// 	render_text(dialogue[dialogue_index][1] + "(z)", 50.f, 100.f, .5f, glm::vec3(0.0, 0.8f, 0.2f));
-
 	
 	GL_ERRORS();
 }

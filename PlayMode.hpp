@@ -141,13 +141,6 @@ struct PlayMode : Mode {
 	//camera:
 	Scene::Camera *camera = nullptr;
 
-	struct NPC {
-		std::vector<std::vector<std::string>> dialogue;
-		int dialogue_index = 0;
-		glm::vec3 postion;
-
-	};
-
 	struct Character {
 	    unsigned int TextureID; // ID handle of the glyph texture
 		glm::ivec2   Size;      // Size of glyph
