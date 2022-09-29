@@ -62,6 +62,7 @@ struct Player {
 	// Individual player info.
 	Move *moves[num_moves];
 	bool is_deciding = false;
+	int move_selected = -1;
 	bool is_winner = false;
 	int max_health = 100;
 	int cur_health = 100;
