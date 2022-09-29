@@ -15,6 +15,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
+#include <ctime>
 #include <random>
 
 #include <ft2build.h>
@@ -48,6 +49,40 @@ Load< Sound::Sample > dusty_floor_sample(LoadTagDefault, []() -> Sound::Sample c
 	return new Sound::Sample(data_path("dusty-floor.opus"));
 });
 
+int Attack::activate(Player *user, Player *target) {
+	int damage_done = base_damage;
+	std::mt19937 mt(std::time(nullptr));
+	// check if move hits
+	float accuracy_roll = float(mt()) / float(mt.max());
+	if (accuracy_roll > accuracy)
+		return 0;
+	// check for crit
+	float crit_roll = float(mt()) / float(mt.max());
+	bool was_crit = crit_roll <= crit_chance;
+	if (was_crit)
+		damage_done *= 2;
+	// random damage variance
+	int rand_dmg_range = Attack::dmg_variance_range * damage_done;
+	damage_done += ((int(mt()) % (2 * rand_dmg_range)) - rand_dmg_range);
+
+	// apply damage
+	return std::max(1, damage_done);
+}
+
+int Heal::activate(Player *user, Player *target) {
+	std::mt19937 mt(std::time(nullptr));
+	// check if move hits
+	float accuracy_roll = float(mt()) / float(mt.max());
+	if (accuracy_roll > accuracy)
+		return 0;
+	// Heal for half of the target's max health
+	return std::max(1, (int)((float)(target->max_health) * percent_heal));
+}
+
+Player::Player(unsigned int start_health) {
+	max_health = start_health;
+	cur_health = start_health;
+}
 
 PlayMode::PlayMode() : scene(*hexapod_scene), shader(data_path("text.vs").c_str(), data_path("text.fs").c_str()) {
 	//get pointers to leg for convenience:
