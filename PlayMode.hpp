@@ -28,7 +28,7 @@ struct Animation {
 };
 
 enum Battle_Phase {
-	PHASE_DEFAULT, // default value
+	// PHASE_DEFAULT, // default value
 	DECIDING, // players are deciding on moves
 	ANIMATING, // move animations are playing
 	REPORTING, // a report of the damages dealt are displayed
@@ -60,12 +60,14 @@ struct Player {
 	Player(unsigned int health_);
 
 	// Individual player info.
-	Move *moves[num_moves];
+	std::vector<Move>moves;
+	// Move *moves[num_moves];
 	bool is_deciding = true;
 	int move_selected = -1;
 	bool is_winner = false;
 	int max_health = 100;
 	int cur_health = 100;
+	int damage_dealt = 0;
 	Animation active_animation;
 };
 

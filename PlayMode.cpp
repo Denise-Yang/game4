@@ -54,8 +54,11 @@ int Attack::activate(Player *user, Player *target) {
 	std::mt19937 mt(std::time(nullptr));
 	// check if move hits
 	float accuracy_roll = float(mt()) / float(mt.max());
-	if (accuracy_roll > accuracy)
+	if (accuracy_roll > accuracy){
+		user->damage_dealt = 0;
 		return 0;
+	}
+
 	// check for crit
 	float crit_roll = float(mt()) / float(mt.max());
 	bool was_crit = crit_roll <= crit_chance;
@@ -64,6 +67,7 @@ int Attack::activate(Player *user, Player *target) {
 	// random damage variance
 	int rand_dmg_range = Attack::dmg_variance_range * damage_done;
 	damage_done += ((int(mt()) % (2 * rand_dmg_range)) - rand_dmg_range);
+	user->damage_dealt = std::max(1, damage_done);
 
 	// apply damage
 	return std::max(1, damage_done);
@@ -95,6 +99,24 @@ PlayMode::PlayMode() : scene(*hexapod_scene), shader(data_path("text.vs").c_str(
 	if (upper_leg == nullptr) throw std::runtime_error("Upper leg not found.");
 	if (lower_leg == nullptr) throw std::runtime_error("Lower leg not found.");
 	/**/
+	Attack kick = Attack("Kick", 10, 10.f, 1.f);
+	Attack kick2 = Attack("Kick2", 10, 10.f, 1.f);
+	Attack kick3 = Attack("Kick3", 10, 10.f, 1.f);
+	Attack kick4 = Attack("Kick4", 10, 10.f, 1.f);
+
+	Attack punch = Attack("Kick", 10, 10.f, 1.f);
+	Attack punch2 = Attack("Punch2", 10, 10.f, 1.f);
+	Attack punch3 = Attack("Punc3", 10, 10.f, 1.f);
+	Attack punch4 = Attack("Punch4", 10, 10.f, 1.f);
+
+	player1.moves.push_back(kick);
+	player1.moves.push_back(kick2);
+	player1.moves.push_back(kick3);
+	player1.moves.push_back(kick4);
+	player2.moves.push_back(punch);
+	player2.moves.push_back(punch2);
+	player2.moves.push_back(punch3);
+	player2.moves.push_back(punch4);
 	load_dialogue(data_path("testDialogue.txt"));
 	// dialogue.push_back({"Hello world", "pls end me", "live laugh love"}); 
 	// dialogue.push_back({"You are now dead","yay","damn"});
@@ -532,12 +554,57 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	glDepthFunc(GL_LESS); //this is the default depth comparison function, but FYI you can change it.
 
 	scene.draw(*camera);
-	if (dialogue_index < dialogue.size()){
-		render_text(dialogue[dialogue_index][0], (windowW-300.f)/2,150.f, .5f, glm::vec3(0, 0.8f, 0.2f));
-		render_text(dialogue[dialogue_index][2] + "(x)", windowW-300.f,100.f, .5f, glm::vec3(0.f, 0.8f, 0.2f));
-		render_text(dialogue[dialogue_index][1] + "(z)", 50.f, 100.f, .5f, glm::vec3(0.0, 0.8f, 0.2f));
+	std::string winner;
 
+	switch (cur_phase){
+		
+		case OVER:
+			if (player2.is_winner){ winner = "Player 2";}
+			else {winner = "Player 1";}
+			render_text(winner + " wins", (windowW-300.f)/2,200.f, .5f, glm::vec3(1.f, 1.f, 1.f));
+			break; // default value
+		case DECIDING: // players are deciding on moves
+			//(windowW-300.f)/2 <- screen mid
+
+			//player one moves
+			printf("current phase %d\n", player1.move_selected);
+
+			if (player1.move_selected == -1) render_text("P1 make your move", 50,225.f, .5f, glm::vec3(0, 0.8f, 0.2f));
+			for (int i = 0;i<player1.num_moves;i++){
+
+				render_text(player1.moves[i].name, 50,200.f - 30*i, .5f, glm::vec3(0, 0.8f, 0.2f));
+			}
+			
+			if (player2.move_selected == -1) render_text("P2 make your move", windowW-300.f,225.f, .5f, glm::vec3(0, 0.8f, 0.2f));
+
+			for (int i = 0;i<player2.num_moves;i++){
+				render_text(player2.moves[i].name, windowW-300.f,200.f - 30*i, .5f, glm::vec3(0, 0.8f, 0.2f));
+			}
+			
+			break;
+		case ANIMATING: // move animations are playing
+			break;
+		case REPORTING:
+			float p1_height = 200.f;
+			float p2_height = 150.f;
+			if (player1.damage_dealt > 0){
+				render_text("Player 1 dealt " + std::to_string(player1.damage_dealt) +" damage", (windowW-300.f)/2, p1_height, .5f, glm::vec3(0, 0.8f, 0.2f));
+			}else{
+				render_text("Player 1 missed", (windowW-300.f)/2, p1_height, .5f, glm::vec3(0, 0.8f, 0.2f));
+			}
+			if (player2.damage_dealt > 0){
+				render_text("Player 2 dealt " + std::to_string(player2.damage_dealt) +" damage", (windowW-300.f)/2, p2_height, .5f, glm::vec3(0, 0.8f, 0.2f));
+			}else{
+				render_text("Player 2 missed", (windowW-300.f)/2, p2_height, .5f, glm::vec3(0, 0.8f, 0.2f));
+			}
+	
+			break;
 	}
+	// if (dialogue_index < dialogue.size()){
+	// 	render_text(dialogue[dialogue_index][0], (windowW-300.f)/2,150.f, .5f, glm::vec3(0, 0.8f, 0.2f));
+	// 	render_text(dialogue[dialogue_index][2] + "(x)", windowW-300.f,100.f, .5f, glm::vec3(0.f, 0.8f, 0.2f));
+	// 	render_text(dialogue[dialogue_index][1] + "(z)", 50.f, 100.f, .5f, glm::vec3(0.0, 0.8f, 0.2f));
+
 	
 	GL_ERRORS();
 }
