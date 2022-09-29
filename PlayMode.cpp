@@ -98,6 +98,9 @@ PlayMode::PlayMode() : scene(*hexapod_scene), shader(data_path("text.vs").c_str(
 	if (hip == nullptr) throw std::runtime_error("Hip not found.");
 	if (upper_leg == nullptr) throw std::runtime_error("Upper leg not found.");
 	if (lower_leg == nullptr) throw std::runtime_error("Lower leg not found.");
+	
+	cur_phase = DECIDING;
+
 	/**/
 	Attack kick = Attack("Kick", 10, 10.f, 1.f);
 	Attack kick2 = Attack("Kick2", 10, 10.f, 1.f);

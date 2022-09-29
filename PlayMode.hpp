@@ -168,5 +168,5 @@ struct PlayMode : Mode {
 	// Battle Stuff
 	Player player1 = Player(Player::max_health_default);
 	Player player2 = Player(Player::max_health_default);
-	Battle_Phase cur_phase;
+	Battle_Phase cur_phase = DECIDING;
 };
