@@ -192,7 +192,6 @@ PlayMode::PlayMode() : scene(*hexapod_scene), shader(data_path("text.vs").c_str(
 PlayMode::~PlayMode() {
 }
 
-
 void PlayMode::load_dialogue(std::string filename){
 	std::ifstream file;
 	file.open("dist/testDialogue.txt");
@@ -220,8 +219,6 @@ void PlayMode::load_dialogue(std::string filename){
     	file.close();
 	}
 }
-	
-	
 
 bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) {
 	windowW = window_size.x;
@@ -262,6 +259,10 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			semi.downs += 1;
 			semi.pressed = true;
 			return true;
+		} else if (evt.key.keysym.sym == SDLK_SPACE) {
+			space.downs += 1;
+			space.pressed = true;
+			return true;
 		}
 	} else if (evt.type == SDL_KEYUP) {
 		if (evt.key.keysym.sym == SDLK_a) {
@@ -287,6 +288,9 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			return true;
 		} else if (evt.key.keysym.sym == SDLK_SEMICOLON) {
 			semi.pressed = false;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_SPACE) {
+			space.pressed = false;
 			return true;
 		}
 	} else if (evt.type == SDL_MOUSEBUTTONDOWN) {
@@ -314,48 +318,135 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 	return false;
 }
 
+void PlayMode::update_deciding(float elapsed) {
+	// if both players have made a move, then progress to the next phase
+	if (!player1.is_deciding && !player2.is_deciding) {
+		if (player1.move_selected == -1)
+			std::cerr << "Error: player 1 is not deciding but move selected is -1!" << std::endl;
+		if (player2.move_selected == -1)
+			std::cerr << "Error: player 2 is not deciding but move selected is -1!" << std::endl;
+		// TODO: change to animating if we make an animating phase
+		cur_phase = REPORTING;
+		return;
+	}
+	// check if players picked a move
+	if (a.pressed) {
+		player1.move_selected = 0;
+		player1.is_deciding = false;
+	}
+	if (s.pressed) {
+		player1.move_selected = 1;
+		player1.is_deciding = false;
+	}
+	if (d.pressed) {
+		player1.move_selected = 2;
+		player1.is_deciding = false;
+	}
+	if (f.pressed) {
+		player1.move_selected = 3;
+		player1.is_deciding = false;
+	}
+	if (j.pressed) {
+		player2.move_selected = 0;
+		player2.is_deciding = false;
+	}
+	if (k.pressed) {
+		player2.move_selected = 1;
+		player2.is_deciding = false;
+	}
+	if (l.pressed) {
+		player2.move_selected = 2;
+		player2.is_deciding = false;
+	}
+	if (semi.pressed) {
+		player2.move_selected = 3;
+		player2.is_deciding = false;
+	}
+}
+
+void PlayMode::update_animating(float elapsed) {
+	// TODO: implement this!
+	cur_phase = REPORTING;
+}
+
+void PlayMode::update_reporting(float elapsed) {
+	if (space.pressed) {
+		if (player1.is_winner || player2.is_winner)
+			cur_phase = OVER;
+		else {
+			player1.is_deciding = true;
+			player2.is_deciding = true;
+			cur_phase = DECIDING;
+		}
+	}
+}
+
+void PlayMode::update_over(float elapsed) {
+	// I don't think we need to do anything here.
+}
+
 void PlayMode::update(float elapsed) {
 
-	//slowly rotates through [0,1):
-	wobble += elapsed / 10.0f;
-	wobble -= std::floor(wobble);
+	switch (cur_phase) {
+		case DECIDING:
+			update_deciding(elapsed);
+			break;
+		case ANIMATING:
+			update_animating(elapsed);
+			break;
+		case REPORTING:
+			update_reporting(elapsed);
+			break;
+		case OVER:
+			update_over(elapsed);
+			break;
+		default:
+			break;
+	}
 
-	hip->rotation = hip_base_rotation * glm::angleAxis(
-		glm::radians(5.0f * std::sin(wobble * 2.0f * float(M_PI))),
-		glm::vec3(0.0f, 1.0f, 0.0f)
-	);
-	upper_leg->rotation = upper_leg_base_rotation * glm::angleAxis(
-		glm::radians(7.0f * std::sin(wobble * 2.0f * 2.0f * float(M_PI))),
-		glm::vec3(0.0f, 0.0f, 1.0f)
-	);
-	lower_leg->rotation = lower_leg_base_rotation * glm::angleAxis(
-		glm::radians(10.0f * std::sin(wobble * 3.0f * 2.0f * float(M_PI))),
-		glm::vec3(0.0f, 0.0f, 1.0f)
-	);
+	// update hexapod (TODO: delete this!)
+	{
+		// //slowly rotates through [0,1):
+		// wobble += elapsed / 10.0f;
+		// wobble -= std::floor(wobble);
+
+		// hip->rotation = hip_base_rotation * glm::angleAxis(
+		// 	glm::radians(5.0f * std::sin(wobble * 2.0f * float(M_PI))),
+		// 	glm::vec3(0.0f, 1.0f, 0.0f)
+		// );
+		// upper_leg->rotation = upper_leg_base_rotation * glm::angleAxis(
+		// 	glm::radians(7.0f * std::sin(wobble * 2.0f * 2.0f * float(M_PI))),
+		// 	glm::vec3(0.0f, 0.0f, 1.0f)
+		// );
+		// lower_leg->rotation = lower_leg_base_rotation * glm::angleAxis(
+		// 	glm::radians(10.0f * std::sin(wobble * 3.0f * 2.0f * float(M_PI))),
+		// 	glm::vec3(0.0f, 0.0f, 1.0f)
+		// );
+	}
 
 	//move sound to follow leg tip position:
-	leg_tip_loop->set_position(get_leg_tip_position(), 1.0f / 60.0f);
+	// leg_tip_loop->set_position(get_leg_tip_position(), 1.0f / 60.0f);
 
 	//move camera:
 	{
 
-		//combine inputs into a move:
-		constexpr float PlayerSpeed = 30.0f;
-		glm::vec2 move = glm::vec2(0.0f);
-		if (left.pressed && !right.pressed) move.x =-1.0f;
-		if (!left.pressed && right.pressed) move.x = 1.0f;
-		if (down.pressed && !up.pressed) move.y =-1.0f;
-		if (!down.pressed && up.pressed) move.y = 1.0f;
+		// //combine inputs into a move:
+		// constexpr float PlayerSpeed = 30.0f;
+		// glm::vec2 move = glm::vec2(0.0f);
+		// if (left.pressed && !right.pressed) move.x =-1.0f;
+		// if (!left.pressed && right.pressed) move.x = 1.0f;
+		// if (down.pressed && !up.pressed) move.y =-1.0f;
+		// if (!down.pressed && up.pressed) move.y = 1.0f;
 
-		//make it so that moving diagonally doesn't go faster:
-		if (move != glm::vec2(0.0f)) move = glm::normalize(move) * PlayerSpeed * elapsed;
+		// //make it so that moving diagonally doesn't go faster:
+		// if (move != glm::vec2(0.0f)) move = glm::normalize(move) * PlayerSpeed * elapsed;
 
-		glm::mat4x3 frame = camera->transform->make_local_to_parent();
-		glm::vec3 frame_right = frame[0];
-		//glm::vec3 up = frame[1];
-		glm::vec3 frame_forward = -frame[2];
+		// glm::mat4x3 frame = camera->transform->make_local_to_parent();
+		// glm::vec3 frame_right = frame[0];
+		// //glm::vec3 up = frame[1];
+		// glm::vec3 frame_forward = -frame[2];
 
-		camera->transform->position += move.x * frame_right + move.y * frame_forward;
+		// camera->transform->position += move.x * frame_right + move.y * frame_forward;
 	}
 
 	{ //update listener to camera position:
@@ -374,6 +465,7 @@ void PlayMode::update(float elapsed) {
 	k.downs = 0;
 	l.downs = 0;
 	semi.downs = 0;
+	space.downs = 0;
 }
 
 void PlayMode::render_text(std::string text, float x, float y, float scale, glm::vec3 color) {

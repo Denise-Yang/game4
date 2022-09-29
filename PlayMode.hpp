@@ -108,7 +108,7 @@ struct PlayMode : Mode {
 	struct Button {
 		uint8_t downs = 0;
 		uint8_t pressed = 0;
-	} a, s, d, f, j, k, l, semi;
+	} a, s, d, f, j, k, l, semi, space;
 
 	//local copy of the game scene (so code can change it during gameplay):
 	Scene scene;
