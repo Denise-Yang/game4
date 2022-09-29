@@ -16,13 +16,15 @@
 #include <string>
 
 enum Anim_Type {
-	ANIM_DEFAULT
+	ANIM_DEFAULT,
+	ANIM_TEST
 };
 
 struct Animation {
 	bool is_playing = false;
 	Anim_Type type;
-	void Play(float elapsed);
+	void play(); // update is_playing, spawn meshes, etc
+	void update(float elapsed); // move meshes around, whatever
 };
 
 enum Battle_Phase {
