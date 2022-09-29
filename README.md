@@ -1,22 +1,43 @@
-# (TODO: your game's title)
+# But Words Will Never Hurt me
 
-Author: (TODO: your name)
+Authors: Dakota Hernandez (dshernan), Denise Yang (denisey)
 
-Design: (TODO: In two sentences or fewer, describe what is new and interesting about your game.)
+Design: Our game is a JRPG-style turn-based game. Players attack each other with words, because words can be hurtful!
 
-Text Drawing: (TODO: how does the text drawing in this game work? Is text precomputed? Rendered at runtime? What files or utilities are involved?)
+Our "extra thing" is adding voice effects that correspond to the different choices the player makes! We wanted to have more in-depth voices for specific scnearios, but we ran out of time.
 
-Choices: (TODO: how does the game store choices and narrative? How are they authored? Anything nifty you want to point out?)
+Text Drawing: Our game stores glyphs for the standard ASCII character set while the PlayMode constructor is running. When a string needs to be drawn, we iterate through the characters in the string at runtime and render the glyph texture. We wanted to implement text shaping with Harfbuzz but we ran out of time.
+
+Choices: The game keeps track of each player's move choices and health. In the game's "Deciding" phase, each player selects a move. After selecting, the players deal damage to each other. There is variance in damage dealth, move accuracy, and critical hit chance that can take the battle in many different directions. Hence, each battle is unique.
 
 Screen Shot:
 
-![Screen Shot](screenshot.png)
+![Screen Shot](game-screenshot.png)
 
 How To Play:
 
-(TODO: describe the controls and (if needed) goals/strategy.)
+Player 1:
 
-Sources: (TODO: list a source URL for any assets you did not create yourself. Make sure you have a license for the asset.)
+- Rap: a
+- Roast: s
+
+Player 2:
+
+- Loaf: j
+- Roll Call: k
+
+Sources:
+
+Models: 
+
+- https://kenney.nl/assets/fantasy-town-kit
+- https://kenney.nl/assets/food-kit
+
+Sounds: 
+
+- ourselves ;)
+
+Text Rendering Code: https://learnopengl.com/In-Practice/Text-Rendering
 
 This game was built with [NEST](NEST.md).
 
