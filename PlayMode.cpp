@@ -92,6 +92,7 @@ int Attack::activate(Player *user, Player *target) {
 	int rand_dmg_range = Attack::dmg_variance_range * damage_done;
 	damage_done += ((int(mt()) % (2 * rand_dmg_range)) - rand_dmg_range);
 	user->damage_dealt = std::max(1, damage_done);
+	target->cur_health -= user->damage_dealt;
 
 	// apply damage
 	return std::max(1, damage_done);
@@ -352,6 +353,8 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 }
 
 void PlayMode::update_deciding(float elapsed) {
+	std::shared_ptr< Sound::PlayingSample >  sample1;
+	std::shared_ptr< Sound::PlayingSample >  sample2;
 	// if both players have made a move, then progress to the next phase
 	if (!player1.is_deciding && !player2.is_deciding) {
 		if (player1.move_selected == -1)
@@ -359,13 +362,16 @@ void PlayMode::update_deciding(float elapsed) {
 		if (player2.move_selected == -1)
 			std::cerr << "Error: player 2 is not deciding but move selected is -1!" << std::endl;
 		// TODO: change to animating if we make an animating phase
-		 std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(1));
-		cur_phase = REPORTING;
+		tick += elapsed;
+		while (tick > 3.00f) {
+			tick -= 3.00f;
+		
+		//  std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(1));
+			cur_phase = REPORTING;
+		}
 		return;
 	}
 	// check if players picked a move
-	std::shared_ptr< Sound::PlayingSample >  sample1;
-	std::shared_ptr< Sound::PlayingSample >  sample2;
 	if (a.pressed) {
 		if (player1.is_deciding) {
 			sample1 = Sound::play_3D(*p1_rap_sample, .9f, camera->transform->position, 10.0f);
@@ -426,10 +432,13 @@ void PlayMode::update_reporting(float elapsed) {
 		if (player1.is_winner || player2.is_winner)
 			cur_phase = OVER;
 		else {
+			player1.moves[player1.move_selected].activate(&player1,&player2);
+			player2.moves[player2.move_selected].activate(&player2,&player1);
 			player1.move_selected = -1;
 			player2.move_selected = -1;
 			
 			cur_phase = DECIDING;
+			player1_done_speaking = false;
 		}
 	}
 }
@@ -521,6 +530,14 @@ void PlayMode::render_text(std::string text, float x, float y, float scale, glm:
 }
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
+	auto current_time = std::chrono::high_resolution_clock::now();
+	static auto previous_time = current_time;
+	float elapsed = std::chrono::duration< float >(current_time - previous_time).count();
+	previous_time = current_time;
+
+	//if frames are taking a very long time to process,
+	//lag to avoid spiral of death:
+	elapsed = std::min(0.1f, elapsed);
 	//update camera aspect ratio for drawable:
 	camera->aspect = float(drawable_size.x) / float(drawable_size.y);
 
@@ -587,17 +604,28 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 
 				render_text("Player 1 missed", (windowW-300.f)/2, p1_height, .5f, glm::vec3(0, 0.8f, 0.2f));
 			}
+			tick2 += elapsed;
+			while (!player1_done_speaking &&tick2 > 2.00f) {
+				tick2 -= 2.00f;
 
+				if (player2.damage_dealt > 0){
+					if (!player2.is_deciding) Sound::play_3D(*p2_hit_sample, .5f, camera->transform->position, 10.0f);
+				}else{
+					if (!player2.is_deciding) Sound::play_3D(*p2_miss_sample, .5f, camera->transform->position, 10.0f);
+				}
+				player1_done_speaking= true;
+					
+					//  std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(1));
+				
+			
+			}
 			if (player2.damage_dealt > 0){
-				if (!player2.is_deciding) Sound::play_3D(*p2_hit_sample, .5f, camera->transform->position, 10.0f);
-
 				render_text("Player 2 dealt " + std::to_string(player2.damage_dealt) +" damage", (windowW-300.f)/2, p2_height, .5f, glm::vec3(0, 0.8f, 0.2f));
 			}else{
-				if (!player2.is_deciding) Sound::play_3D(*p2_miss_sample, .5f, camera->transform->position, 10.0f);
 				render_text("Player 2 missed", (windowW-300.f)/2, p2_height, .5f, glm::vec3(0, 0.8f, 0.2f));
 			}
 			player1.is_deciding = true;
-			player2.is_deciding = true;
+			if(player1_done_speaking) player2.is_deciding = true;
 	
 			break;
 	}

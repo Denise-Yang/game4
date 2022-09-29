@@ -93,6 +93,8 @@ struct Heal : Move {
 struct PlayMode : Mode {
 	PlayMode();
 	virtual ~PlayMode();
+	float tick = 0;
+	float tick2 = 0;
 
 	//functions called by main loop:
 	virtual bool handle_event(SDL_Event const &, glm::uvec2 const &window_size) override;
@@ -114,7 +116,7 @@ struct PlayMode : Mode {
 
 	//local copy of the game scene (so code can change it during gameplay):
 	Scene scene;
-
+	bool player1_done_speaking = false;
 	int dialogue_index = 0;
 	int windowW;
 	int windowH;
